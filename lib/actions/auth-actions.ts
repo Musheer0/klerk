@@ -23,7 +23,7 @@ try {
         ...data,
         redirectTo: '/home'
     })
-} catch (error) {
+} catch(error)  {
     if(error instanceof AuthError){
         return {error: error.cause?.err?.message|| 'invalid credentials'}
     }
@@ -55,7 +55,7 @@ export const RegisterUser = async(value:z.infer<typeof CredentialsRegisterSchema
             user.email
           );
           return response
-        } catch (error) {
+        } catch  {
       return {error: 'internal server error'}
         }
         }
@@ -95,7 +95,7 @@ export const resetpassword = async(password:string, otp:string, tokenId:string)=
     return {user}
   }
     }
-   } catch (error) {
+   } catch  {
     return {error: 'server error , try again'}
    }
 };
@@ -129,7 +129,7 @@ export const changeEmail = async(email:string, otp:string, tokenId:string)=>{
     return {user}
   }
     }
-   } catch (error) {
+   } catch  {
     return {error: 'server error , try again'}
    }
 };
@@ -170,7 +170,7 @@ export const updateProfile = async(value:z.infer<typeof UpdateProfileSchema>)=>{
             }
            }) as User;
      return {user}
-        } catch (error) {
+        } catch  {
       return {error: 'internal server error'}
         }
         }
@@ -197,7 +197,7 @@ export const authenticatePassword = async(password:string)=>{
               }
             }
             else return {error:'access denied'}
-        } catch (error) {
+        } catch  {
             return {error:'server error'}
         }
     }

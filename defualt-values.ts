@@ -1,0 +1,1 @@
+export const defualt_token_life =new Date(Date.now() *15 *60*1000)

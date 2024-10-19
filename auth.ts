@@ -5,7 +5,6 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from 'bcryptjs'
 import prisma from "./db"
 import { send_email } from "./lib/actions/resend";
-import { renderToStaticMarkup } from "react-dom/server";
 import { WelcomeEmailTemplate } from "./components/email-templates/welcome-email";
 import { defualt_token_life } from "./defualt-values";
 export const { handlers, signIn, signOut, auth } = NextAuth({

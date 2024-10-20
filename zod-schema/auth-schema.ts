@@ -14,3 +14,9 @@ export const UpdateProfileSchema = z.object({
     name:z.string().min(3).max(64),
     displayName:z.string().min(3).max(86)
 })
+export const UpdateEmailSchema = z.object({
+    email:z.string().min(3).max(64),
+})
+export const PasswordSchema = z.object({
+    password:z.string().min(6).max(32),
+})

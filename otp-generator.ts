@@ -1,11 +1,5 @@
-import crypto from 'crypto'
+import OtpGenerator from 'otp-generator'
 export function generateOtp(length = 6) {
-    // Generate random bytes
-    const randomBytes = crypto.randomBytes(length);
-    
-    // Convert the bytes to a base64 string and extract the desired length
-    const otp = randomBytes.toString('base64').replace(/\+/g, '0').slice(0, length);
-    
-    // Ensure the OTP is numeric if desired
-    return otp.replace(/[^\d]/g, '').slice(0, length);
+    const randomBytes =OtpGenerator.generate(length, { upperCaseAlphabets: false, specialChars: false, digits: true, lowerCaseAlphabets:false});
+    return randomBytes
 }

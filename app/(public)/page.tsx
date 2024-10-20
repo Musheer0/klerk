@@ -1,4 +1,4 @@
-import { KlerkLandingPageComponent } from '@/components/klerk-landing-page'
+import { KlerkLandingPageComponent } from '@/components/shared/klerk-landing-page'
 import React from 'react'
 
 const page =async () => {

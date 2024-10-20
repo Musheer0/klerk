@@ -3,12 +3,13 @@
 import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { CheckCircle, Database, Key, LayoutTemplate, Lock, Repeat, Zap } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { motion } from "framer-motion"
+import { ModeToggle } from './theme-togler'
+import SignInDisplay from '../auth/display/sigin-display'
+import AuthCard from '../auth/auth-card'
 
 const logos = [
   { src: "/placeholder.svg?text=Auth.js", alt: "Auth.js" },
@@ -56,7 +57,7 @@ export function KlerkLandingPageComponent() {
         </nav>
       </header>
       <main className="flex-1">
-        <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48">
+        <section className="w-full py-12 md:py-4 lg:py-2 xl:py-8">
           <div className="container px-4 md:px-6">
             <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
               <motion.div
@@ -85,26 +86,16 @@ export function KlerkLandingPageComponent() {
                 viewport={{ once: true }}
                 variants={fadeInUpVariants}
               >
-                <Card className="transition-all duration-300 hover:shadow-lg hover:shadow-primary/25">
-                  <CardHeader>
-                    <CardTitle>Login</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <form>
-                      <div className="grid gap-4">
-                        <div className="grid gap-2">
-                          <Label htmlFor="email">Email</Label>
-                          <Input id="email" placeholder="m@example.com" type="email" autoCapitalize="none" autoComplete="email" autoCorrect="off" />
-                        </div>
-                        <div className="grid gap-2">
-                          <Label htmlFor="password">Password</Label>
-                          <Input id="password" type="password" autoCapitalize="none" autoComplete="current-password" />
-                        </div>
-                        <Button type="submit">Sign In</Button>
-                      </div>
-                    </form>
-                  </CardContent>
-                </Card>
+               <AuthCard className='p-0 pt-0 '
+                   footerLink={
+                    <>
+                      <p className='text-sm py-3 text-muted-foreground'>Don&apos;t have an account? <Link href={'/sign-up'}><span className='text-primary font-semibold hover:underline hover:text-primary/80 cursor-pointer'>Sign up</span></Link></p>
+                    </>
+                  }
+                  showcase
+               >
+               <SignInDisplay/>
+               </AuthCard>
               </motion.div>
             </div>
           </div>
@@ -184,6 +175,7 @@ export function KlerkLandingPageComponent() {
                 <p className="text-gray-500 md:text-xl">
                   Take control of your authentication system with our intuitive and feature-rich admin dashboard.
                 </p>
+                <ModeToggle/>
                 <ul className="grid gap-2">
                   <li className="flex items-center">
                     <CheckCircle className="mr-2 h-4 w-4 text-primary" />

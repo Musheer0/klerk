@@ -9,13 +9,16 @@ export const send_email = async(
 )=>{
     const resend = new Resend(process.env.RESEND_API_KEY!);
     const {data, error} = await resend.emails.send({
-        from: 'Acme <onboarding@resend.dev>',
-        to: ['musheeran165@gmail.com'],
+        // Replace with your registered custom domain
+        from: 'Klerk <onboarding@resend.dev>',
+        //this is email for any info please contact here or any of my socials
+        to: ['musheeran444@gmail.com'],
        subject,
         react
     });
+    console.log(error, 'reseend--------')
     if(data){
         return {success: 'check your email to confrim your account'}
     }
-    else return{error}
+    else return{error: error?.message}
 }

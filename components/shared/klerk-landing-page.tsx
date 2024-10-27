@@ -48,11 +48,11 @@ export function KlerkLandingPageComponent() {
           <Link className="text-sm font-medium hover:underline underline-offset-4" href="#features">
             Features
           </Link>
-          <Link className="text-sm font-medium hover:underline underline-offset-4" href="#pricing">
-            Pricing
-          </Link>
           <Link className="text-sm font-medium hover:underline underline-offset-4" href="#docs">
             Docs
+          </Link>
+          <Link className="text-sm font-medium hover:underline underline-offset-4" href="/sign-in">
+            Sign-in
           </Link>
         </nav>
       </header>
@@ -93,6 +93,9 @@ export function KlerkLandingPageComponent() {
                     </>
                   }
                   showcase
+                  title=''
+                  description=''
+                  showSocialButton={false}
                >
                <SignInDisplay/>
                </AuthCard>

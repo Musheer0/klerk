@@ -14,12 +14,13 @@ import { Loader2Icon } from 'lucide-react'
 import { toast } from 'sonner'
 import { GetSessionUser } from '@/lib/actions/auth-actions'
 import { redirect } from 'next/navigation'
+import UseWindow from '@/hooks/use-window'
 
 const InitUser = ({ children }: { children: ReactNode }) => {
     const {  status } = useSession(); // Get session data and status from next-auth
     const { user, setUser } = useUser(); // Access user state and updater from custom store
     const [isLoading, setIsloading] = useState(true); // Loading state
-
+    const window = UseWindow();
     useEffect(() => {
         // Function to fetch current user session
         const setSession = async () => {
@@ -71,7 +72,13 @@ const InitUser = ({ children }: { children: ReactNode }) => {
             {children} {/* Render child components when user is present */}
         </>
     );
+    if(!window?.navigator.onLine)
+        return (
+            <div className='w-full h-screen bg-destructive/10 flex items-center justify-center'>
+             <p className='text-2xl font-bold'>Your Currently Offline</p>
 
+            </div>
+        )
     // Render message when there is no session
     return  redirect('/sign-in')
 };

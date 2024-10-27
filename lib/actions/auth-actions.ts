@@ -13,6 +13,9 @@ import { EmailChangeEmailTemplate } from "@/components/email-templates/email-cha
 import { generateOtp } from "@/otp-generator"
 import { OtpEmailTemplate } from "@/components/email-templates/otp-email"
 import { EditNameSchema } from "@/zod-schema/edit-account"
+import { TwoFactorEnabledEmailTemplate } from "@/components/email-templates/two-factor-enabled-email"
+
+
 
 // Default token expiration time (15 minutes)
 const defualt_token_life = new Date(Date.now() + 15 * 60 * 1000);
@@ -20,15 +23,16 @@ const defualt_token_life = new Date(Date.now() + 15 * 60 * 1000);
 // Log in a user using credentials
 export const Login = async (value: z.infer<typeof CredentialsLoginSchema>) => {
     const { error, data } = CredentialsLoginSchema.safeParse(value);
-    
     if (!error) {
         try {
-            await signIn('credentials', {
+         await signIn('credentials', {
                 ...data,
-                redirectTo: '/home'
-            });
+                redirect: false
+            })
+            return {success: true}
         } catch (error) {
             if (error instanceof AuthError) {
+                console.log(error.cause?.err?.message)
                 return { error: error.cause?.err?.message || 'invalid credentials' };
             } else {
                 return { error: 'internal server error' };
@@ -123,7 +127,7 @@ export const resetpassword = async (password: string, otp: string, tokenId: stri
                 // Send email notification about password change
                 await send_email(
                     'Your Account Password Was Changed',
-                    PasswordChangeEmailTemplate({ firstName: user.name!, changeDate: new Date().toISOString() }),
+                    PasswordChangeEmailTemplate({ firstName: user.name!, changeDate: new Date().toLocaleString() }),
                     user.email!
                 );
                 return { user };
@@ -151,10 +155,24 @@ export const changeEmail = async (email: string, otp: string, tokenId: string, p
             }
         });
 
-        if (token?.identifier === session.user.id!) {
+        if (token?.identifier === session.user.id! && token.expires.getTime()> new Date().getTime()) {
             const iscorrectpassword = await authenticatePassword(password);
             if(iscorrectpassword)
             if (email) {
+                //check if email already user by another user
+                const isEmailAlreadyTaken = await GetUserByEmail(email);
+                if(isEmailAlreadyTaken?.email===email){
+                    await prisma.verificationToken.delete({
+                        where: {
+                        "identifier_token":{
+                            identifier: session.user.id!,
+                            token: tokenId,
+                        }
+                        }
+                    });
+                     return {error: 'email already in use'}
+
+                }
                 // Update user's email in the database
                 const user = await prisma.user.update({
                     where: {
@@ -163,15 +181,27 @@ export const changeEmail = async (email: string, otp: string, tokenId: string, p
                     data: {
                         email,
                         previous_email: session.user.email!
+                    },
+                    select:{
+                        email: true,
+                        //to send mail wth name we select user.
+                        name: true
                     }
                 });
-
-                // Send email notification about email change
+                await prisma.verificationToken.delete({
+                    where: {
+                    "identifier_token":{
+                        identifier: session.user.id!,
+                        token: tokenId,
+                    }
+                    }
+                });
+                // Send email notification about email change 
                 await send_email(
                     'Your Account Email Was Changed',
                     EmailChangeEmailTemplate({
                         firstName: user.name!,
-                        changeDate: new Date().toISOString(),
+                        changeDate: new Date().toLocaleString(),
                         newEmail: email,
                     }),
                     session.user.email!
@@ -181,17 +211,18 @@ export const changeEmail = async (email: string, otp: string, tokenId: string, p
             else{ return {error: 'email not found'}}
             else return{ error: 'invalid password'}
         }
+        else return {error: 'token expired'}
     } catch {
         return { error: 'server error, try again' };
     }
 };
 
 // Send an OTP for email verification or password reset
-export const sendOtp = async (title: string, subject: string, email?:string) => {
+export const sendOtp = async (title: string, subject: string,email='',showlink=false) => {
     if (title) {
         const session = await auth();
+        const otp = await generateOtp(4);
         if (session?.user?.email) {
-            const otp = await generateOtp(4);
             // Create a verification token with the OTP
             const token = await prisma.verificationToken.create({
                 data: {
@@ -208,12 +239,42 @@ export const sendOtp = async (title: string, subject: string, email?:string) => 
                     firstName: session.user.name!,
                     otp: token.otp!,
                     title,
-                    expirationTime: 'your otp will expire in 15 mins'
+                    expirationTime: 'your otp will expire in 15 mins',
+                    otpLink: showlink? `${process.env.NEXT_PUBLIC_APP_URL!}/reset-password/${token.token}`: ''
                 }),
                 email ? email:session.user.email
             );
             if(response.success) return {token: token.token};
             else return {error:response.error};
+        }
+        else{
+            const user= await GetUserByEmail(email) 
+           if(user){
+             // Create a verification token with the OTP
+             const token = await prisma.verificationToken.create({
+                data: {
+                    identifier:user.id as string,
+                    expires: defualt_token_life,
+                    otp
+                }
+            });
+
+            // Send the OTP via email
+            const response = await send_email(
+                subject,
+                OtpEmailTemplate({
+                    firstName: user.name!,
+                    otp: token.otp!,
+                    title,
+                    expirationTime: 'your otp will expire in 15 mins',
+                    otpLink: showlink? `${process.env.NEXT_PUBLIC_APP_URL!}/reset-password/${token.token}`: ''
+                }),
+                email ? email:user.email
+            );
+            if(response.success) return {token: token.token};
+            else return {error:response.error};
+           }
+           return {error: 'user not found'}
         }
     } else {
         return { error: 'missing data' };
@@ -236,8 +297,12 @@ export const updateProfile = async (value: z.infer<typeof EditNameSchema>) => {
                 },
                 data: {
                     ...data
-                }
-            }) as User;
+                },
+               select:{
+                name: true,
+                displayName: true,
+               }
+            }) 
             return { user };
         } catch {
             return { error: 'internal server error' };
@@ -347,15 +412,19 @@ export const VerifyEmail = async (tokenId: string): Promise<{ success?: string; 
 
 // Get the currently authenticated user session
 export const GetSessionUser = async () => {
-    console.log('hello')
     const session = await auth();
-    console.log(session)
     if (session?.user?.id) {
         // Retrieve user details from the database
         const user = await prisma.user.findUnique({
-            where: { id: session.user.id! }
+            where: { id: session.user.id! },
+            include: {
+                accounts: {
+                    select:{
+                        provider:true
+                    }
+                }
+            }
         });
-        console.log(user)
         return user;
     }
 };
@@ -364,8 +433,10 @@ export const sendChangeEmailVerificationCode = async(value:z.infer<typeof Update
     if(!error){
      try {
          const iscorrectpassword = await authenticatePassword(password);
+         const existing_user = await GetUserByEmail(data.email);
+         if(existing_user) return {error: 'user already exists'}
          if(iscorrectpassword){
-            const response  = sendOtp('Confirm Your Email Change Request', 'Your One-Time Password (OTP) for Email Change',data.email);
+            const response  = sendOtp('Confirm Your Email Change Request', 'Your One-Time Password (OTP) for Email Change',data.email,false);
             return response
          }
          else{
@@ -378,4 +449,163 @@ export const sendChangeEmailVerificationCode = async(value:z.infer<typeof Update
     }
     else return {error: 'user not found'}
 
+};
+// dude just read the fun name ?!
+export const GetUserByEmail = async(email:string)=>{
+    if(email){
+        const user = await prisma.user.findFirst({
+            where: {
+                email
+            }
+        });
+        return user;
+    }
+    else return null
+};
+
+export const verifyOtp = async(tokenId:string, otp:string)=>{
+    if(tokenId && otp){
+        const token = await prisma.verificationToken.findFirst({
+            where: {
+                token: tokenId,
+                otp
+            }
+        });
+      if(token){
+        if(token?.expires.getTime()> new Date().getTime())   return {token:token?.token}
+        else return {error: 'token expired'}
+      }
+      else return {error: 'token not found'}
+    }
+    else return {error: 'missing data'}
+};
+export const resetpasswordwithoutlogin = async (password: string, otp: string, tokenId: string) => {
+    if (!password || !otp || !tokenId) return { error: 'missing data' };
+
+    try {
+
+        // Validate OTP and token
+        const token = await prisma.verificationToken.findFirst({
+            where: {
+                token: tokenId,
+                otp
+            }
+        });
+
+        if (token?.identifier) {
+           if(token.expires.getTime()> new Date().getTime()) {
+            const hashed_password = await hash(password, 10);
+            if (hashed_password) {
+                // Update user's password in the database
+                const user = await prisma.user.update({
+                    where: {
+                        id: token.identifier
+                    },
+                    data: {
+                        password: hashed_password,
+                        lastpasswordChange: new Date()
+                    }
+                });
+                await prisma.verificationToken.delete({
+                    where: {
+                       "identifier_token":{
+                        token: tokenId,
+                        identifier: user.id
+                       }
+                    }
+                });
+                // Send email notification about password change
+                await send_email(
+                    'Your Account Password Was Changed',
+                    PasswordChangeEmailTemplate({ firstName: user.name!, changeDate: new Date().toISOString() }),
+                    user.email!
+                );
+                return { user };
+            };
+           }
+           else{
+            return {error: 'token expired'}
+           }
+        }
+    } catch {
+        return { error: 'server error, try again' };
+    }
+};
+export const enableTwoFactorAuthentication = async(password:string)=>{
+    const session = await GetSessionUser();
+    if(session?.accounts.length!==0) return {error: 'this account is not eligible for two factor authentication'}
+    if(!session?.id)   return {error: 'unauthorized'}
+    const iscorrectpassword =await authenticatePassword(password);
+    if(iscorrectpassword.success){
+
+      const user =  await prisma.user.update({
+            where:{
+                id:session.id!
+            },
+            data:{
+                twofactorauthenticationenable : new Date()
+            },
+            select:{
+                twofactorauthenticationenable: true
+            }
+        });
+ await send_email('Alert Two factor authentication enabled!', 
+            TwoFactorEnabledEmailTemplate({
+                firstName: session.name!,
+                enableDate: user.twofactorauthenticationenable?.toDateString() as string
+            }),
+            session.email!
+        );
+        return {twofactorauthenticationenable: user.twofactorauthenticationenable}
+    }
+    else{
+        return {error: 'invalid password'}
+    }
+}
+export const disableTwoFactorAuthentication = async(password:string)=>{
+    const session = await auth();
+    if(!session?.user) throw new Error('unautharized')
+   try {
+    const iscorrectpassword =await authenticatePassword(password);
+    console.log(iscorrectpassword)
+    if(iscorrectpassword.success){
+     const user =   await prisma.user.update({
+            where:{
+                id:session.user.id!
+            },
+            data:{
+                 twofactorauthenticationenable: null
+            },
+            select:{
+                twofactorauthenticationenable: true
+            }
+            
+        });
+        return {twofactorauthenticationenable: user.twofactorauthenticationenable}
+    }
+    else if(iscorrectpassword.error){
+        return {error: 'invalid password'}
+    }
+   } catch (error) {
+    console.log(error)
+    return {error: 'server error'}
+   }
+   return {error: 'server error'}
+
+}
+export const GetAccountOauth = async(email:string)=>{
+      const account = await prisma.user.findUnique({
+        where: {
+            email
+        },
+        select:{
+            accounts: {
+                select:{
+                    provider: true,
+                    type: true
+                }
+            }
+        }
+      });
+      return account;
 }

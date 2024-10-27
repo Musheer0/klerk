@@ -22,6 +22,7 @@ import { useUser } from '@/stores/useUser'
 import { EditNameSchema } from '@/zod-schema/edit-account'
 import { motion } from 'framer-motion'
 import { updateProfile } from '@/lib/actions/auth-actions'
+import { UserWithAccount } from '@/lib/types'
 
 const EditNameForm = ({ onclose }: { onclose?: () => void }) => {
     const { user, setUser } = useUser()
@@ -38,14 +39,19 @@ const EditNameForm = ({ onclose }: { onclose?: () => void }) => {
     const handleSubmit = async (data: z.infer<typeof EditNameSchema>) => {
         setIsloading(true)
         try {
-            const updated_user = await updateProfile(data)
-            if (updated_user.user) {
-                setUser(updated_user.user)
+            const response = await updateProfile(data)
+            const updated_user :UserWithAccount ={
+                ...user,
+                name: response.user?.name,
+                displayName: response.user?.displayName
+            } as UserWithAccount
+            if (response.user) {
+                setUser(updated_user)
                 toast("updated profile", { position: 'top-center' });
              if(onclose)   onclose();
             }
-            if (updated_user.error) {
-                toast(updated_user.error)
+            if (response.error) {
+                toast(response.error)
             }
         } catch  {
             toast('server error, try again')

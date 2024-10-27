@@ -29,6 +29,7 @@ export default function RootLayout({
           <SessionProvider>
             <Toaster/>
           <InitUser>
+          <p className="absolute top-0 left-0 bg-orange-500 text-xs">development-mode</p>
 {children}
 </InitUser>
 </SessionProvider>

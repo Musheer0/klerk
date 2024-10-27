@@ -13,6 +13,7 @@ import Spinner from '@/components/shared/spinner'
 import Error from '@/components/promise-states/error'
 import Pending from '@/components/promise-states/pending'
 import { VerifyEmail } from '@/lib/actions/auth-actions'
+import { useRouter } from 'next/navigation'
 
   
 const VerifyToken = ({id}:{id:string}) => {
@@ -20,6 +21,7 @@ const VerifyToken = ({id}:{id:string}) => {
     const [isLoading ,setIsloading] = useState(false)
     const [email, setEmail] = useState('')
     const [error,setError] = useState('')
+    const router = useRouter()
     useEffect(()=>{
     const verify = async()=>{
       if(!isVerified){
@@ -33,6 +35,7 @@ const VerifyToken = ({id}:{id:string}) => {
         else{
           setIsloading(false)
           setError(response.error!)
+          router.push('/home')
         }
        }
     };

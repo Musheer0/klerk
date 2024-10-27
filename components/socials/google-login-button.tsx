@@ -1,15 +1,20 @@
 "use client"
-import React from 'react'
+/* eslint-disable @typescript-eslint/no-unused-vars  */
+/* eslint-disable   @typescript-eslint/no-non-null-asserted-optional-chain*/
+import React, { useState } from 'react'
 import { FcGoogle } from "react-icons/fc";
 import SocialButton from './social-button';
-import { signIn } from 'next-auth/react';
-const GoogleLoginButton = ({className=''}:{className?:string}) => {
+import { cn } from '@/lib/utils';
+import { OauthLogin, OAuthProviders } from './modified-oauthlogin';
+const GoogleLoginButton = ({className='',isModal}:{className?:string,isModal:boolean}) => {
+  const [isLoading, setIsloading] = useState(false)
   return (
- <SocialButton Onclick={()=>{
-  //@ts-expect-error fk this type check
-  className={className}
-  signIn("google")
- }} text='Google' Icon={FcGoogle}/>
+ <SocialButton
+ Onclick={async()=>{
+  setIsloading(true);
+  await OauthLogin(OAuthProviders.Google)
+  setIsloading(false)
+ }} className={cn(className)} text='Google' Icon={FcGoogle} loading={isLoading}/>
   )
 }
 

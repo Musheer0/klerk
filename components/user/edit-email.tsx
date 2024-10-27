@@ -1,4 +1,5 @@
 "use client"
+/* eslint-disable   @typescript-eslint/no-non-null-asserted-optional-chain*/
 import {
     AlertDialog,
     AlertDialogContent,
@@ -24,9 +25,10 @@ const EditEmail = () => {
     return (
         <div className='w-full border-b py-3 flex flex-col space-y-2'>
             <p className='font-semibold text-sm'>Email address</p>
+               {user?.previous_email ?  <p className="text-xs bg-secondary w-fit px-2 py-1 rounded-full border">previous email: {user?.previous_email} </p>:  <></>}
             <div className='flex items-center justify-between w-full'>
-                <p>{user?.email || 'No email provided'}</p>
-                {user?.password && (
+                <p>{user?.email || 'No email provided'} {user?.accounts?.length!>0 && <><span className="text-xs text-primary bg-secondary p-1 rounded-full px-3">{user?.accounts[0].provider}</span></>}</p>
+                {user?.accounts.length===0 && (
                     <Popover>
                         <PopoverTrigger>
                             <Button className='bg-transparent hover:bg-foreground/5 text-primary hover:text-primary/80'>

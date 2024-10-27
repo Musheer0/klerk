@@ -16,8 +16,10 @@ model User {
   accounts      Account[]
   sessions      Session[]
   previous_email String?
+  lastpasswordChange DateTime @default(now())
   password String?
   displayName String?
+  twofactorauthenticationenable  DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

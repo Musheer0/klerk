@@ -7,10 +7,10 @@ import UserDropDown from './user-drop-down';
 const UserButton =({size}:{size?:number}) => {
     const {user} = useUser()
   return (
-    <div className=''>
+    <div className='cursor-pointer '>
         <p className='hidden'>{size}</p>
         <UserDropDown>
-        <Avatar>
+        <Avatar >
     <AvatarImage 
         src={user?.image || ''} // Use an empty string as a fallback if user.image is undefined
         alt={user?.name || 'User Avatar'} // Provide an alt text for accessibility

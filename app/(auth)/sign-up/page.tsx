@@ -6,6 +6,9 @@ import React from 'react'
 const page = () => {
   return (
     <AuthCard
+    title='Sign-up to clerk'
+    showSocialButton
+    description='please create an account to continue'
     footerLink={
       <>
         <p className='text-sm py-3 text-muted-foreground'>Already have an account? <Link href={'/sign-in'}><span className='text-primary font-semibold hover:underline hover:text-primary/80 cursor-pointer'>Sign in</span></Link></p>

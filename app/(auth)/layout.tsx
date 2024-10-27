@@ -23,6 +23,7 @@ export default function RootLayout({
         defaultTheme="system"
         enableSystem
         >
+          <p className="absolute top-0 left-0 bg-orange-500 text-xs">development-mode</p>
 {children}
         </ThemeProvider>
         

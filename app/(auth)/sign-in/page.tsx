@@ -5,13 +5,15 @@ import React from 'react'
 const page = () => {
   return (
     <AuthCard
+    title='Sign in to Klerk'
+    showSocialButton
     footerLink={
       <>
         <p className='text-sm py-3 text-muted-foreground'>Don&apos;t have an account? <Link href={'/sign-up'}><span className='text-primary font-semibold hover:underline hover:text-primary/80 cursor-pointer'>Sign up</span></Link></p>
       </>
     }
     >
-      <SignInForm/>
+      <SignInForm redirect/>
     </AuthCard>
   )
 }

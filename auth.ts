@@ -7,10 +7,12 @@ import bcrypt from "bcryptjs";
 import prisma from "./db";
 import { send_email } from "./lib/actions/resend";
 import { WelcomeEmailTemplate } from "./components/email-templates/welcome-email";
+
 const defualt_token_life = new Date(Date.now() + 15 * 60 * 1000);
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
-    GitHub,
+    GitHub({}),
     Google,
     Credentials({
       credentials: {
@@ -21,7 +23,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         try {
           // Validate credentials
           if (!credentials.email || !credentials.password) {
-            throw new Error("Email and password are required");
+            throw new Error("Please provide both your email and password to continue.");
           }
 
           // Find user by email
@@ -29,14 +31,26 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             where: {
               email: credentials.email as string,
             },
+            include: {
+              accounts: {
+                select: {
+                  provider: true
+                }
+              }
+            }
           });
 
           // User not found
           if (!user) {
-            throw new Error("Invalid credentials");
+            throw new Error("We couldn't find an account with that email. Please check your details and try again.");
           }
 
-          // Check if email is verified
+          // If user has OAuth account only
+          if (user.accounts.length !== 0 && !user.password) {
+            throw new Error("It seems you signed up using an OAuth provider. Please use one of the available login options above.");
+          }
+          else{
+             // Check if email is verified
           if (!user.emailVerified) {
             // Create a verification token
             const token = await prisma.verificationToken.create({
@@ -56,16 +70,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             );
 
             // Throw an error to inform the user
-            throw new Error("Email not verified. Check your email to verify.");
+            throw new Error("Your email is not verified yet. We've sent a verification email to your inbox. Please check and verify your email to continue.");
           }
 
+          }
           // Compare password
           const isCorrectPassword = await bcrypt.compare(
             credentials.password as string,
             user.password!
           );
           if (!isCorrectPassword) {
-            throw new Error("Invalid credentials");
+            throw new Error("The email or password you entered is incorrect. Please try again.");
           }
 
           // Return the user object if authentication is successful
@@ -73,7 +88,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         } catch (error: any) {
           // Log the error for debugging
           console.error("Authorization error:", error);
-          throw new Error(error.message || "Invalid credentials");
+          throw new Error(error.message || "We encountered an issue while processing your request. Please try again later.");
         }
       },
     }),
@@ -82,15 +97,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     strategy: "jwt",
   },
   callbacks: {
-    async session({ user, session , token}) {
-      session.user.id = token.sub!
+    async session({ user, session, token }) {
+      session.user.id = token.sub!;
       return session;
     },
   },
   adapter: PrismaAdapter(prisma),
   events: {
     async linkAccount({ user, account }) {
-      if (account.provider === "github") {
+      if (account.provider === "github" || account.provider==='googles') {
         await prisma.user.update({
           where: {
             id: user.id,
@@ -100,6 +115,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           },
         });
       }
-    },
+    }
   },
+  secret: process.env.AUTH_SECRET
 });

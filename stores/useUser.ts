@@ -1,13 +1,13 @@
-import { User } from '@prisma/client'
+import { UserWithAccount } from '@/lib/types'
 import { create } from 'zustand'
 
 type Store = {
-  user: User|null
-  setUser: (data:User) => void
+  user: UserWithAccount|null
+  setUser: (data:UserWithAccount) => void
 }
 
 export const useUser = create<Store>()((set) => ({
   user: null,
-  setUser: (data:User) => set(() => ({ user: data })),
+  setUser: (data:UserWithAccount) => set(() => ({ user: data })),
 }))
 

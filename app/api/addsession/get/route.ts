@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { decode } from "next-auth/jwt";
 import { NextRequest } from "next/server";
 
-export async function GET(req:NextRequest) {
+export async function GET() {
     // Retrieve the cookies utility from the headers to access session cookies
     const cookiesUtil = await cookies();
     

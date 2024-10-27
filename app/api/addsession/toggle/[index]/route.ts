@@ -1,8 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars  */
+/* eslint-disable   @typescript-eslint/no-unused-expressions  */
+/* eslint-disable   @typescript-eslint/no-non-null-asserted-optional-chain*/
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { session_cookie } from "@/lib/types";
 
-export async function POST( { params: { index } }: { params: { index: string } }) {
+export async function POST(request: Request, { params: { index } }: { params: { index: string } }) {
     const cookieStore = cookies();
     const response = NextResponse.json({ success: true });
 

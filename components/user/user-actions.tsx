@@ -17,7 +17,7 @@ const UserAction = () => {
     // Render the user action UI only if the user is authenticated
     if (user)
         return (
-            <div className='bg-background rounded-b-sm shadow-md'>
+            <div className='bg-background w-full h-full overflow-hidden rounded-b-sm shadow-md'>
                 <div className='p-5 pb-1 flex flex-col gap-1'>
                     <div className="user flex items-start gap-2">
                     <Avatar>

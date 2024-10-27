@@ -13,7 +13,7 @@ import UserAction from "./user-actions"
         <DropdownMenuTrigger asChild className="select-none">
             {children}
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="  bg-secondary shadow-sm m-2 p-0 rounded-md min-w-[300px] "  forceMount  >
+        <DropdownMenuContent className="overflow-hidden  bg-secondary shadow-sm m-2 p-0 rounded-md min-w-[300px] "  forceMount  >
         
          <UserAction/>
          <Footer/>

@@ -31,6 +31,7 @@ async function toggleSession(index:number){
 const Sessions = () => {
     const [query, setQuery] = useState<null| {name:string, email:string, id:string, picture:string}[]>(null);
     const [loading, setLoading] = useState(true);
+    const [swithchingSession, isSwitchingSession] = useState(false)
     
     useEffect(() => {
         // Fetch data only on component mount
@@ -48,7 +49,11 @@ const Sessions = () => {
 
         fetchData();
     }, []); // Empty dependency array ensures this runs only once
-
+  if(swithchingSession){
+    return <div className='absolute w-full h-full backdrop-blur-sm top-0 left-0 flex items-center justify-center  z-10'>
+        <Spinner/>
+    </div>
+  }
     if (loading) {
         return <div className='w-full flex items-center'><Spinner/></div>;
     }
@@ -64,10 +69,10 @@ if(query && query.length>0)
              role='button'
              tabIndex={1}
              onClick={async()=>{
-                setLoading(true)
+                isSwitchingSession(true)
                 await toggleSession(i).then(()=>window.location.reload())
                 toast("reloading please wait")
-                // setLoading(false)
+                
             }}
                 
              key={i}

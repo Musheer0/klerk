@@ -1,11 +1,12 @@
 import { session_cookie } from "@/lib/types";
 import { cookies } from "next/headers";
 import { decode } from "next-auth/jwt";
+import { NextRequest } from "next/server";
 
-export async function GET() {
+export async function GET(req:NextRequest) {
     // Retrieve the cookies utility from the headers to access session cookies
     const cookiesUtil = await cookies();
-
+    
     // Attempt to get the "sessions" cookie, which contains session data
     const sessions = await cookiesUtil.get("sessions");
 
@@ -21,7 +22,7 @@ export async function GET() {
                     salt: process.env.NODE_ENV !== "production" 
                         ? "authjs.session-token" 
                         : "__Secure-authjs.session-token", // Salt value depends on the environment
-                    secret: "l1Igad3G6zJOnxS27uUnanQQ7RR6T4kVa6JrmvjbSRM=", // Secret key used for decoding
+                    secret: process.env.AUTH_SECRET!, // Secret key used for decoding /DEkIJTjFN0bL2Vz1aVUc5Vmo50Z5azmJurcNvtkISU=
                 }).then((res) => {
                     // Map decoded token information to a user-friendly object
                     return {
@@ -35,6 +36,7 @@ export async function GET() {
         );
 
         // Respond with the decoded session data if available
+        console.log(decodedSessions)
         return Response.json(decodedSessions);
     } else {
         // If no "sessions" cookie found, return an error response

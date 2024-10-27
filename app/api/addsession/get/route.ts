@@ -1,7 +1,6 @@
 import { session_cookie } from "@/lib/types";
 import { cookies } from "next/headers";
 import { decode } from "next-auth/jwt";
-import { NextRequest } from "next/server";
 
 export async function GET() {
     // Retrieve the cookies utility from the headers to access session cookies
